@@ -1,0 +1,220 @@
+---
+title: "Fst Analysis of Ostrea lurida"
+author: "Katherine Silliman"
+output:
+  github_document:
+    toc: yes
+---
+
+```{r}
+library(hierfstat) #For calculating pairwise Fst
+library(ggplot2) #For plotting
+library(reshape2) #For plotting
+library("adegenet") #For storing genotype data
+```
+
+#Dataset with only Ostrea lurida
+Load previously created Adegenet genind objects. Made by loading .str file into adegenet and saving as an R object.
+```{r}
+load("../../../../c80-denovo/Analysis/PCA/OL-c80-66-s67-m70x62-maf025-u.adegenet")
+g.indF
+```
+
+Calculating Weir and Cockerham pairwise Fst between all pairs of populations. This can take a while...
+```{r}
+gindF.fst.mat <- pairwise.fst(g.indF, pop = strata(g.indF)$Population,res.type = "matrix")
+gindF.fst.mat
+```
+Calculating WC pairwise Fst betwen all pairs of regions.
+```{r}
+gindF.fst.reg.mat <- pairwise.fst(g.indF, pop = strata(g.indF)$Region,res.type = "matrix")
+gindF.fst.reg.mat
+```
+Editing region names for a prettier graph.
+```{r}
+#Editing to have state in name
+reg_names = c("PugetWA+BC","NW_BC","South_CA","North_CA","Oregon","Humboldt_CA","Willapa_WA+Coos_OR")
+colnames(gindF.fst.reg.mat)<- reg_names
+rownames(gindF.fst.reg.mat)<- reg_names
+
+#Rearranging by North to South
+N_S_reg <- c("NW_BC","PugetWA+BC","Willapa_WA+Coos_OR","Oregon","Humboldt_CA","North_CA","South_CA")
+             
+gindF.fst.reg.mat.NS <- gindF.fst.reg.mat[N_S_reg,N_S_reg]
+#Save pairwise Fst values to a file
+write.table(gindF.fst.reg.mat.NS, file="OL-m70x62-maf025-Reg.pwfst",row.names = T,col.names = T)
+```
+Editing population names for a prettier graph.
+```{r}
+#Editing to have state in name
+state_names = c("Victoria_BC","Klaskino_BC","Barkeley_Sound_BC","Ladysmith_BC","San_Diego_CA","San_Francisco_CA","Netarts_OR","Tomales_CA","Elkhorn_Slough_CA","Humboldt_CA","Mugu_Lagoon_CA","Coos_OR","Yaquina_OR","Hood_Canal_WA","Liberty_WA","Discovery_WA","North_WA","Willapa_WA")
+colnames(gindF.fst.mat)<- state_names
+rownames(gindF.fst.mat)<- state_names
+
+#Rearranging North-South
+N_S <- c("Klaskino_BC","Barkeley_Sound_BC","Ladysmith_BC","Victoria_BC","Discovery_WA","Liberty_WA","Hood_Canal_WA","North_WA","Willapa_WA","Netarts_OR","Yaquina_OR","Coos_OR", "Humboldt_CA","Tomales_CA","San_Francisco_CA","Elkhorn_Slough_CA","Mugu_Lagoon_CA","San_Diego_CA")
+gindF.fst.mat.NS <- gindF.fst.mat[N_S,N_S]
+write.table(gindF.fst.mat.NS, file="OL-m70x62-maf025.pwfst",row.names = T,col.names = T)
+```
+## Plotting
+```{r}
+#Melting
+gindF.fst.mat.tri <- gindF.fst.mat.NS
+gindF.fst.mat.tri[lower.tri(gindF.fst.mat.NS, diag=TRUE)] <- NA
+melted <- melt(gindF.fst.mat.tri, na.rm =TRUE)
+
+#Melting
+gindF.fst.reg.mat.tri <- gindF.fst.reg.mat.NS
+gindF.fst.reg.mat.tri[lower.tri(gindF.fst.reg.mat.NS, diag=TRUE)] <- NA
+melted.reg <- melt(gindF.fst.reg.mat.tri, na.rm =TRUE)
+
+par(mfrow=c(2,1))
+ggplot(data = melted, aes(Var2, Var1, fill = value))+ geom_tile(color = "white")+ 
+  scale_fill_gradient(low = "white", high = "red", name="FST")  +
+  ggtitle(expression(atop("Pairwise FST, WC (1984)", atop(italic("N = 137, L = 9,170"), ""))))+
+  labs( x = "Sampling Site", y = "Sampling Site") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1),axis.text.y = element_text(size = 13)) + 
+  coord_fixed()
+
+ggplot(data = melted.reg, aes(Var2, Var1, fill = value))+ geom_tile(color = "white")+ 
+  scale_fill_gradient(low = "white", high = "red", name="FST")  + 
+  ggtitle(expression(atop("Pairwise FST, WC (1984)", atop(italic("N = 137, L = 9,170"), ""))))+ 
+  labs( x = "Region", y = "Region")+ 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 10, hjust = 1),axis.text.y = element_text(size = 12)) + 
+  coord_fixed()
+```
+
+## Basic PopGen stats
+Calculating popgen stats using heirfstat. Done for the population level, regional level, and north/south level.
+```{r}
+#Creating genind objects with North/South strata set for population
+temp.gind <- g.indF
+pop(temp.gind) <- strata(g.indF)$North.South
+#Calculating popgen stats 
+NS.stats <- basic.stats(temp.gind,diploid = TRUE,digits=2)
+print("North-South")
+print("Observed heterozygosity")
+colMeans(NS.stats$Ho,na.rm = T)
+print("Expected heterozygosity")
+colMeans(NS.stats$Hs,na.rm=T)
+NS.stats$overall
+```
+
+```{r}
+#Creating genind objects with Region strata set for population
+pop(temp.gind) <- strata(g.indF)$Region
+#Calculating popgen stats 
+Reg.stats <- basic.stats(temp.gind,diploid = TRUE,digits=2)
+print("Regions")
+print("Observed heterozygosity")
+colMeans(Reg.stats$Ho,na.rm = T)
+print("Expected heterozygosity")
+colMeans(Reg.stats$Hs,na.rm=T)
+Reg.stats$overall
+```
+```{r}
+#Creating genind objects with Region strata set for population
+pop(temp.gind) <- strata(g.indF)$Population
+#Calculating popgen stats 
+Pop.stats <- basic.stats(temp.gind,diploid = TRUE,digits=2)
+print("Populations")
+print("Observed heterozygosity")
+colMeans(Pop.stats$Ho,na.rm = T)
+print("Expected heterozygosity")
+colMeans(Pop.stats$Hs,na.rm=T)
+Pop.stats$overall
+```
+
+#Dataset with both O. lurida and O. conchaphila
+```{r}
+load("../../../../c80-denovo/Analysis/PCA/All5C-c80-66-s67-m70x62-mac4-u.adegenet")
+All.g.indm70
+```
+By population:
+```{r}
+gind.all.mat <- pairwise.fst(All.g.indm70, pop = strata(All.g.indm70)$Population,res.type = "matrix")
+gind.all.mat
+```
+```{r}
+#Editing to have state in name
+all_names = c("Victoria_BC","Klaskino_BC","Barkeley_Sound_BC","Ladysmith_BC","San_Diego_CA","San_Francisco_CA","Netarts_OR","Tomales_CA","Elkhorn_Slough_CA","Humboldt_CA","Mugu_Lagoon_CA","Coos_OR","Yaquina_OR","Hood_Canal_WA","Liberty_WA","Discovery_WA","North_WA","Willapa_WA","O.Conchaphila")
+colnames(gind.all.mat)<- all_names
+rownames(gind.all.mat)<- all_names
+
+#Rearranging North-South
+N_S_C <- c("Klaskino_BC","Barkeley_Sound_BC","Ladysmith_BC","Victoria_BC","Discovery_WA","Liberty_WA","Hood_Canal_WA","North_WA","Willapa_WA","Netarts_OR","Yaquina_OR","Coos_OR", "Humboldt_CA","Tomales_CA","San_Francisco_CA","Elkhorn_Slough_CA","Mugu_Lagoon_CA","San_Diego_CA", "O.Conchaphila")
+gind.all.mat.NS <- gind.all.mat[N_S_C,N_S_C]
+write.table(gind.all.mat.NS, file="All5C-c80-66-s67-m70x62-mac4.pwfst",row.names = T,col.names = T)
+```
+By region:
+```{r}
+gind.all.reg.mat <- pairwise.fst(All.g.indm70, pop = strata(All.g.indm70)$Region,res.type = "matrix")
+gind.all.reg.mat
+```
+```{r}
+#Editing to have state in name
+all_names_reg = c("PugetWA+BC","NW_BC","South_CA","North_CA","Oregon","Humboldt_CA","Willapa_WA+Coos_OR","Conchaphila")
+colnames(gind.all.reg.mat)<- all_names_reg
+rownames(gind.all.reg.mat)<- all_names_reg
+
+#Rearranging North-South
+N_S_C.reg <- c("NW_BC","PugetWA+BC","Willapa_WA+Coos_OR","Oregon","Humboldt_CA","North_CA","South_CA","Conchaphila")
+gind.all.reg.mat.NS <- gind.all.reg.mat[N_S_C.reg,N_S_C.reg]
+write.table(gind.all.reg.mat.NS, file="All5C-c80-66-s67-m70x62-mac4-Reg.pwfst",row.names = T,col.names = T)
+```
+##Plotting
+```{r}
+#Melting
+gind.all.mat.tri <- gind.all.mat.NS
+gind.all.mat.tri[lower.tri(gind.all.mat.NS, diag=TRUE)] <- NA
+melted.all <- melt(gind.all.mat.tri, na.rm =TRUE)
+
+gind.all.mat.reg.tri <- gind.all.reg.mat.NS
+gind.all.mat.reg.tri[lower.tri(gind.all.reg.mat.NS, diag=TRUE)] <- NA
+melted.all.reg <- melt(gind.all.mat.reg.tri, na.rm =TRUE)
+
+par(mfrow=c(2,1))
+ggplot(data = melted.all, aes(Var2, Var1, fill = value))+ geom_tile(color = "white")+ scale_fill_gradient(low = "white", high = "red", name="FST")  + ggtitle(expression(atop("Pairwise FST, WC (1984)", atop(italic("N = 145, L = 9,322"), ""))))+labs( x = "Sampling Site", y = "Sampling Site") + theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 9, hjust = 1),axis.text.y = element_text(size = 10)) + coord_fixed()
+
+ggplot(data = melted.all.reg, aes(Var2, Var1, fill = value))+ geom_tile(color = "white")+ scale_fill_gradient(low = "white", high = "red", name="FST")  + ggtitle(expression(atop("Pairwise FST, WC (1984)", atop(italic("N = 145, L = 9,322"), ""))))+labs( x = "Region", y = "Region") + theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 9, hjust = 1),axis.text.y = element_text(size = 10)) + coord_fixed()
+```
+##Popgen stats
+Calculating popgen stats using heirfstat. Done for the population level, regional level, and north/south/conchaphila level.
+```{r}
+#Creating genind objects with North/South strata set for population
+temp.gind <- All.g.indm70
+pop(temp.gind) <- strata(All.g.indm70)$North.South
+#Calculating popgen stats 
+NS.All.stats <- basic.stats(temp.gind,diploid = TRUE,digits=2)
+print("North-South")
+print("Observed heterozygosity")
+colMeans(NS.All.stats$Ho,na.rm = T)
+print("Expected heterozygosity")
+colMeans(NS.All.stats$Hs,na.rm=T)
+NS.All.stats$overall
+```
+
+```{r}
+#Creating genind objects with Region strata set for population
+pop(temp.gind) <- strata(All.g.indm70)$Region
+#Calculating popgen stats 
+Reg.All.stats <- basic.stats(temp.gind,diploid = TRUE,digits=2)
+print("Regions")
+print("Observed heterozygosity")
+colMeans(Reg.All.stats$Ho,na.rm = T)
+print("Expected heterozygosity")
+colMeans(Reg.All.stats$Hs,na.rm=T)
+Reg.All.stats$overall
+```
+```{r}
+#Creating genind objects with Region strata set for population
+pop(temp.gind) <- strata(All.g.indm70)$Population
+#Calculating popgen stats 
+Pop.All.stats <- basic.stats(temp.gind,diploid = TRUE,digits=2)
+print("Populations")
+print("Observed heterozygosity")
+colMeans(Pop.All.stats$Ho,na.rm = T)
+print("Expected heterozygosity")
+colMeans(Pop.All.stats$Hs,na.rm=T)
+Pop.All.stats$overall
+```
