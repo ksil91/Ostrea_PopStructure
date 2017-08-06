@@ -1,25 +1,21 @@
-Making Files and EEMS
+Making files for other programs
 ================
 Katherine Silliman
 
+-   [Load adegenet objects](#load-adegenet-objects)
 -   [Make input for OutFLANK](#make-input-for-outflank)
 -   [Make Treemix file](#make-treemix-file)
 -   [Make an EEMS file](#make-an-eems-file)
-    -   [O. lurida - with OR1](#o.-lurida---with-or1)
-    -   [O. lurida - without OR1](#o.-lurida---without-or1)
--   [All](#all)
-    -   [Make an EEMS file](#make-an-eems-file-1)
-    -   [Plotting](#plotting)
+    -   [OL- with OR](#ol--with-or)
+    -   [Plot EEMS](#plot-eems)
 
-This is an Rmarkdown file to take a genind object from Adegenet and create output files for other programs. It also creates plots for EEMS. \# Load adegenet objects
+Load adegenet objects
+=====================
 
 ``` r
-load("../../c80-denovo/Analysis/PCA/OL-c80-66-s67-m70x62-maf025-u.adegenet")
-```
-
-Genind object with only *Ostrea lurida* individuals
-
-``` r
+load("PCA/OL-c80-66-s67-m70x62-maf025-u.adegenet")
+load("PCA/All5C-c80-66-s67-m70x62-mac4-u.adegenet")
+load("PCA/All-c80-66-m70x62-mac4.adegenet")
 g.indF
 ```
 
@@ -53,29 +49,66 @@ g.indF
     ##    @pop: population of each individual (group size range: 3-11)
     ##    @strata: a data frame with 3 columns ( Population, Region, North.South )
 
+``` r
+All.g.indm70
+```
+
+    ## /// GENIND OBJECT /////////
+    ## 
+    ##  // 145 individuals; 9,322 loci; 18,644 alleles; size: 14.7 Mb
+    ## 
+    ##  // Basic content
+    ##    @tab:  145 x 18644 matrix of allele counts
+    ##    @loc.n.all: number of alleles per locus (range: 2-2)
+    ##    @loc.fac: locus factor for the 18644 columns of @tab
+    ##    @all.names: list of allele names for each locus
+    ##    @ploidy: ploidy of each individual  (range: 2-2)
+    ##    @type:  codom
+    ##    @call: read.structure(file = infile, n.ind = nind.65, n.loc = nloci.m50x65, 
+    ##     onerowperind = FALSE, col.lab = 1, col.pop = 2, row.marknames = 1, 
+    ##     ask = FALSE)
+    ## 
+    ##  // Optional content
+    ##    @pop: population of each individual (group size range: 2-11)
+    ##    @strata: a data frame with 3 columns ( Population, Region, North.South )
+
+``` r
+all.g.ind
+```
+
+    ## /// GENIND OBJECT /////////
+    ## 
+    ##  // 148 individuals; 9,322 loci; 18,644 alleles; size: 14.9 Mb
+    ## 
+    ##  // Basic content
+    ##    @tab:  148 x 18644 matrix of allele counts
+    ##    @loc.n.all: number of alleles per locus (range: 2-2)
+    ##    @loc.fac: locus factor for the 18644 columns of @tab
+    ##    @all.names: list of allele names for each locus
+    ##    @ploidy: ploidy of each individual  (range: 2-2)
+    ##    @type:  codom
+    ##    @call: read.structure(file = infile, n.ind = nind.65, n.loc = nloci.m50x65, 
+    ##     onerowperind = FALSE, col.lab = 1, col.pop = 2, row.marknames = 1, 
+    ##     ask = FALSE)
+    ## 
+    ##  // Optional content
+    ##    @pop: population of each individual (group size range: 1-11)
+    ##    @strata: a data frame with 3 columns ( Population, Region, North.South )
+
 Make input for OutFLANK
 =======================
 
-[OutFLANK](https://github.com/whitlock/OutFLANK) is an R package by M. Whitlock and K. Lotterhos for detecting outlier loci. I find it is very conservative compared to other programs. This code saves a matrix of allele counts per individual, which is then read into OutFLANK in a different notebook. It also saves a file with population designations and region designations, for input into OutFLANK.
-
 ``` r
-#For O. lurida only
 #Write file with allele counts per individual for OutFLANK
-write.table(g.indF@tab, file = "../../c80-denovo/Analysis/Outlier/OL-66-m70x62-maf025.tab",sep = "\t",row.names = T,col.names = T,quote = F )
-#Save file with population of each individual
-write.table(strata(g.indF)$Population, file = "../../c80-denovo/Analysis/Outlier/OL-66-m70x62-maf025.pop",sep = "\t",row.names = F,col.names = F,quote = F )
-#Save file with region of each individual
-write.table(strata(g.indF)$Region, file = "../../c80-denovo/Analysis/Outlier/OL-66-m70x62-maf025.regs",sep = "\t",row.names = F,col.names = F,quote = F )
+write.table(g.indF@tab, file = "Outlier/OL-66-m70x62-maf025.tab",sep = "\t",row.names = T,col.names = T,quote = F )
+write.table(strata(g.indF)$Population, file = "Outlier/OL-66-m70x62-maf025.pop",sep = "\t",row.names = F,col.names = F,quote = F )
+write.table(strata(g.indF)$Region, file = "Outlier/OL-66-m70x62-maf025.regs",sep = "\t",row.names = F,col.names = F,quote = F )
 ```
 
 Make Treemix file
 =================
 
-[Treemix](https://bitbucket.org/nygcresearch/treemix/wiki/Home) infers population splits and mixtures, assuming an underlying tree-like model. This code converts a genind object to a genpop object, saves that to a file, then uses a custom python script to convert it into Treemix format. See Treemix notebook for running and plotting Treemix.
-
 ``` r
-#Convert to genpop
-treemix.path <- "../../c80-denovo/Analysis/Treemix/"
 OL.gp <- genind2genpop(g.indF,pop=strata(g.indF)$Population)
 ```
 
@@ -85,23 +118,19 @@ OL.gp <- genind2genpop(g.indF,pop=strata(g.indF)$Population)
     ## ...done.
 
 ``` r
-write.table(OL.gp$tab, file=paste(treemix.path,"OL/OL-m70x62-maf025.gp",sep = ""), sep = "\t",row.names = T,col.names = T,quote = F )
-#Run genpop2Treemix.py script to make Treemix input and gzip
-system('python ../../Methods/Scripts/genpop2Treemix.py ../../c80-denovo/Analysis/Treemix/OL/OL-m70x62-maf025.gp ../../c80-denovo/Analysis/Treemix/OL/OL-m70x62-maf025.TM.txt')
-system('gzip ../../c80-denovo/Analysis/Treemix/OL/OL-m70x62-maf025.TM.txt')
+write.table(OL.gp$tab, file="Treemix/OL-m70x62-maf025.gp",sep = "\t",row.names = T,col.names = T,quote = F )
+system('python ../../Methods/Scripts/genpop2Treemix.py Treemix/OL-m70x62-maf025.gp Treemix/OL-m70x62-maf025.TM.txt')
+system('gzip Treemix/OL-m70x62-maf025.TM.txt')
 ```
 
 Make an EEMS file
 =================
 
-O. lurida - with OR1
---------------------
-
-Taking a genind object and creating two of the input files for [EEMS](https://github.com/dipetkov/eems). The .outer file is made separately and given the same suffix.
+OL- with OR
+-----------
 
 ``` r
-eems.path <- "../../c80-denovo/Analysis/EEMS/"
-suf <- paste(eems.path,"OL-m70x62-maf025",sep="")
+suf <- "EEMS/OL-m70x62-maf025"
 geno <- g.indF@tab
 stopifnot(identical(g.indF@type, 'codom'))
 # Get rid of non-biallelic loci
@@ -111,17 +140,13 @@ if (length(multi.cols)) geno <- geno[, - multi.cols]
 nloci <- dim(geno)[2] / 2
 #Choose allele to be "derived" allele.
 geno <- geno[, c(seq(1,ncol(geno),by = 2))]
-```
 
-The number of individuals and SNPs in matrix geno.
-
-``` r
 dim(geno)
 ```
 
     ## [1]  137 9170
 
-bed2diff functions, taken from EEMS documentation.
+bed2diff functions
 
 ``` r
 bed2diffs_v1 <- function(Geno) {
@@ -158,8 +183,6 @@ bed2diffs_v2 <- function(Geno) {
   Diffs
 }
 ```
-
-Creating both v1 and v2 dissimilarity matrices.
 
 ``` r
 # 137 inds, 9,170 loci
@@ -208,15 +231,11 @@ sort(round(eigen(diffs.v2)$values, digits = 2))
     ## [122] -0.22 -0.21 -0.21 -0.20 -0.20 -0.20 -0.19 -0.19 -0.19 -0.19 -0.18
     ## [133] -0.17 -0.17 -0.16 -0.16 59.75
 
-Make matrix with GPS coordinates for each individual. Uses a file with strata information for each population identifier:
-
-``` r
-system('cat ../../c80-denovo/Making_Files/OLPop2Int_Loc.txt')
-```
+Make distance matrix
 
 ``` r
 ## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/OLPop2Int_Loc.txt", header=T)
+pop2gps <- read.table(file = "../Making_Files/OLPop2Int_Loc.txt", header=T)
 names <- indNames(g.indF)
 N = length(names)
 gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
@@ -229,7 +248,7 @@ for(i in 1:nrow(pop2gps)){
 }
 ```
 
-Write file preferentially for v1 matrix, if it is Euclidean. Save these with the same suffix.
+Write file for v1
 
 ``` r
 write.table(diffs.v1, paste(suf,".v1.diffs",sep=""), 
@@ -237,16 +256,10 @@ write.table(diffs.v1, paste(suf,".v1.diffs",sep=""),
 write.table(gps_matrix, paste(suf,".v1.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
 ```
 
-O. lurida - without OR1
------------------------
-
-Excluding Coos Bay OR samples, as these are likely transplants from Willapa Bay and mess up the model.
-
 ``` r
-#Excluding Coos Bay samples
 gind.xOR <- g.indF[!(indNames(g.indF) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
 
-suf <- paste(eems.path,"OL-m70x62-maf025-xOR1",sep="")
+suf <- "EEMS/OL-m70x62-maf025-xOR1"
 geno <- gind.xOR@tab
 stopifnot(identical(gind.xOR@type, 'codom'))
 # Get rid of non-biallelic loci
@@ -311,7 +324,7 @@ Make distance matrix
 
 ``` r
 ## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/OLPop2Int_Loc.txt", header=T)
+pop2gps <- read.table(file = "../Making_Files/OLPop2Int_Loc.txt", header=T)
 names <- indNames(gind.xOR)
 N = length(names)
 gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
@@ -327,14 +340,18 @@ for(i in 1:nrow(pop2gps)){
 Write file for v1
 
 ``` r
-write.table(diffs.v1, paste(suf,".v1.diffs",sep=""),col.names = FALSE, row.names = FALSE, quote = FALSE)
+write.table(diffs.v1, paste(suf,".v1.diffs",sep=""), 
+            col.names = FALSE, row.names = FALSE, quote = FALSE)
 write.table(gps_matrix, paste(suf,".v1.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
 ```
+
+Plot EEMS
+---------
 
 After running, plot EEMS output:
 
 ``` r
-library(rEEMSplots)
+library(rEEMSplots) #Get from EEMS github
 library(rgdal)
 ```
 
@@ -361,16 +378,7 @@ library(rworldxtra)
 ```
 
 ``` r
-eems.plots(mcmcpath = paste(eems.path,"OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1",sep=""), 
-           plotpath = paste(eems.path,"OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1-plots",sep=""),
-           longlat = T,
-           add.grid=F,
-           add.outline = T,
-           add.demes = T,
-           projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",
-           add.map = T,
-           add.abline = T, 
-           add.r.squared = T)
+eems.plots(mcmcpath = "EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1", plotpath = "EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1-plots",longlat = T,add.grid=F,add.outline = T,add.demes = T,projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",add.map = T,add.abline = T, add.r.squared = T)
 ```
 
     ## Input projection: +proj=longlat +datum=WGS84
@@ -393,11 +401,11 @@ eems.plots(mcmcpath = paste(eems.path,"OL-c80-m70x62-maf025-xOR1_results/OL-m70x
 
     ## Processing the following EEMS output directories :
 
-    ## ../../c80-denovo/Analysis/EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
+    ## EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
 
     ## Plotting effective migration surface (posterior mean of m rates)
 
-    ## ../../c80-denovo/Analysis/EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
+    ## EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
 
     ## Using the default DarkOrange to Blue color scheme, with 'white' as the midpoint color.
     ## It combines two color schemes from the 'dichromat' package, which itself is based on
@@ -408,7 +416,7 @@ eems.plots(mcmcpath = paste(eems.path,"OL-c80-m70x62-maf025-xOR1_results/OL-m70x
 
     ## Plotting effective diversity surface (posterior mean of q rates)
 
-    ## ../../c80-denovo/Analysis/EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
+    ## EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
 
     ## Using the default DarkOrange to Blue color scheme, with 'white' as the midpoint color.
     ## It combines two color schemes from the 'dichromat' package, which itself is based on
@@ -419,282 +427,8 @@ eems.plots(mcmcpath = paste(eems.path,"OL-c80-m70x62-maf025-xOR1_results/OL-m70x
 
     ## Plotting posterior probability trace
 
-    ## ../../c80-denovo/Analysis/EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
+    ## EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
 
     ## Plotting average dissimilarities within and between demes
 
-    ## ../../c80-denovo/Analysis/EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1
-
-All
-===
-
-Make an EEMS file
------------------
-
-``` r
-All.xOR <- All.g.indm70[!(indNames(All.g.indm70) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
-suf <- paste(eems.path,"All-m70x62-mac4-xOR1",sep="")
-geno <- All.xOR@tab
-stopifnot(identical(All.xOR@type, 'codom'))
-# Get rid of non-biallelic loci
-multi.loci <- names(which(All.xOR@loc.n.all != 2))
-multi.cols <- which(grepl(paste0("^", multi.loci, "\\.\\d+$", collapse = "|"), colnames(geno)))
-if (length(multi.cols)) geno <- geno[, - multi.cols]
-nloci <- dim(geno)[2] / 2
-#Choose allele to be "derived" allele.
-geno <- geno[, c(seq(1,ncol(geno),by = 2))]
-
-dim(geno)
-```
-
-    ## [1]  138 9322
-
-``` r
-# 138 inds, 9,322 loci
-#bed2diffs functions  
-diffs.v1 <- bed2diffs_v1(geno)
-diffs.v2 <- bed2diffs_v2(geno)
-diffs.v1 <- round(diffs.v1, digits = 6)
-diffs.v2 <- round(diffs.v2, digits = 6)
-```
-
-Check that the dissimilarity matrix has one positive eigenvalue and nIndiv-1 negative eigenvalues, as required by a full-rank Euclidean distance matrix.
-
-``` r
-sort(round(eigen(diffs.v1)$values, digits = 2))
-```
-
-    ##   [1] -8.98 -2.91 -1.49 -1.36 -1.17 -0.93 -0.78 -0.74 -0.69 -0.68 -0.66
-    ##  [12] -0.64 -0.61 -0.60 -0.56 -0.53 -0.53 -0.50 -0.50 -0.50 -0.49 -0.49
-    ##  [23] -0.47 -0.47 -0.46 -0.45 -0.45 -0.44 -0.44 -0.43 -0.43 -0.43 -0.42
-    ##  [34] -0.41 -0.41 -0.40 -0.40 -0.40 -0.39 -0.39 -0.39 -0.38 -0.38 -0.37
-    ##  [45] -0.37 -0.36 -0.36 -0.36 -0.35 -0.35 -0.35 -0.34 -0.34 -0.34 -0.34
-    ##  [56] -0.33 -0.33 -0.33 -0.32 -0.32 -0.31 -0.31 -0.31 -0.30 -0.30 -0.30
-    ##  [67] -0.30 -0.29 -0.29 -0.29 -0.28 -0.28 -0.28 -0.28 -0.27 -0.27 -0.27
-    ##  [78] -0.27 -0.27 -0.26 -0.26 -0.26 -0.26 -0.26 -0.25 -0.25 -0.25 -0.25
-    ##  [89] -0.24 -0.24 -0.24 -0.24 -0.24 -0.24 -0.23 -0.23 -0.23 -0.22 -0.22
-    ## [100] -0.22 -0.22 -0.22 -0.21 -0.21 -0.21 -0.21 -0.20 -0.20 -0.20 -0.20
-    ## [111] -0.19 -0.19 -0.19 -0.18 -0.18 -0.18 -0.18 -0.17 -0.17 -0.17 -0.16
-    ## [122] -0.16 -0.16 -0.16 -0.15 -0.15 -0.15 -0.14 -0.14 -0.13 -0.12 -0.12
-    ## [133] -0.10 -0.09 -0.09 -0.06  0.01 57.52
-
-``` r
-sort(round(eigen(diffs.v2)$values, digits = 2))
-```
-
-    ##   [1] -6.96 -2.10 -1.10 -0.97 -0.79 -0.66 -0.65 -0.64 -0.60 -0.58 -0.57
-    ##  [12] -0.55 -0.50 -0.49 -0.47 -0.46 -0.45 -0.44 -0.43 -0.43 -0.42 -0.42
-    ##  [23] -0.40 -0.39 -0.39 -0.39 -0.38 -0.38 -0.37 -0.37 -0.36 -0.35 -0.35
-    ##  [34] -0.35 -0.34 -0.34 -0.33 -0.33 -0.33 -0.32 -0.32 -0.31 -0.31 -0.30
-    ##  [45] -0.30 -0.30 -0.30 -0.30 -0.29 -0.29 -0.28 -0.28 -0.28 -0.28 -0.28
-    ##  [56] -0.28 -0.27 -0.27 -0.27 -0.27 -0.26 -0.26 -0.26 -0.26 -0.26 -0.25
-    ##  [67] -0.25 -0.25 -0.25 -0.25 -0.24 -0.24 -0.24 -0.24 -0.24 -0.24 -0.24
-    ##  [78] -0.23 -0.23 -0.23 -0.23 -0.22 -0.22 -0.22 -0.22 -0.22 -0.22 -0.21
-    ##  [89] -0.21 -0.21 -0.21 -0.21 -0.20 -0.20 -0.20 -0.20 -0.20 -0.19 -0.19
-    ## [100] -0.19 -0.19 -0.19 -0.19 -0.18 -0.18 -0.18 -0.17 -0.17 -0.17 -0.17
-    ## [111] -0.17 -0.16 -0.16 -0.16 -0.15 -0.15 -0.15 -0.15 -0.15 -0.15 -0.14
-    ## [122] -0.14 -0.14 -0.14 -0.14 -0.13 -0.13 -0.12 -0.12 -0.12 -0.12 -0.11
-    ## [133] -0.11 -0.11 -0.10 -0.10 -0.09 47.43
-
-Make distance matrix with diff.v2
-
-``` r
-## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/All_Pop2Int_Loc.txt", header=T)
-names <- indNames(All.xOR)
-N = length(names)
-gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
-for(i in 1:nrow(pop2gps)){
-    popmatch <- grep(pop2gps[i,1],names,value=FALSE)
-    for(j in popmatch){
-        gps_matrix[j,2] <- pop2gps$Latitude[i]
-        gps_matrix[j,1] <- pop2gps$Longitude[i]
-    }
-}
-```
-
-Write file for v2
-
-``` r
-write.table(diffs.v2, paste(suf,"v2.diffs",sep=""), col.names = FALSE, row.names = FALSE, quote = FALSE)
-write.table(gps_matrix, paste(suf,"v2.coord",sep="."),col.names = FALSE, row.names = FALSE,quote = FALSE)
-```
-
-``` r
-Alla.xOR <- all.g.ind[!(indNames(all.g.ind) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
-suf <- paste(eems.path,"Allall-m70x62-mac4-xOR1",sep="")
-geno <- Alla.xOR@tab
-stopifnot(identical(Alla.xOR@type, 'codom'))
-# Get rid of non-biallelic loci
-multi.loci <- names(which(Alla.xOR@loc.n.all != 2))
-multi.cols <- which(grepl(paste0("^", multi.loci, "\\.\\d+$", collapse = "|"), colnames(geno)))
-if (length(multi.cols)) geno <- geno[, - multi.cols]
-nloci <- dim(geno)[2] / 2
-#Choose allele to be "derived" allele.
-geno <- geno[, c(seq(1,ncol(geno),by = 2))]
-
-dim(geno)
-```
-
-    ## [1]  141 9322
-
-``` r
-# 141 inds, 9,322 loci
-#bed2diffs functions  
-diffs.v1 <- bed2diffs_v1(geno)
-diffs.v2 <- bed2diffs_v2(geno)
-diffs.v1 <- round(diffs.v1, digits = 6)
-diffs.v2 <- round(diffs.v2, digits = 6)
-```
-
-Check that the dissimilarity matrix has one positive eigenvalue and nIndiv-1 negative eigenvalues, as required by a full-rank Euclidean distance matrix.
-
-``` r
-sort(round(eigen(diffs.v1)$values, digits = 2))
-```
-
-    ##   [1] -11.87  -3.07  -1.49  -1.36  -1.18  -0.94  -0.80  -0.77  -0.73  -0.70
-    ##  [11]  -0.69  -0.68  -0.66  -0.63  -0.60  -0.59  -0.58  -0.55  -0.53  -0.52
-    ##  [21]  -0.50  -0.50  -0.49  -0.48  -0.48  -0.47  -0.46  -0.46  -0.45  -0.45
-    ##  [31]  -0.43  -0.43  -0.43  -0.43  -0.42  -0.42  -0.41  -0.40  -0.40  -0.39
-    ##  [41]  -0.39  -0.39  -0.39  -0.38  -0.38  -0.38  -0.37  -0.37  -0.36  -0.36
-    ##  [51]  -0.35  -0.35  -0.35  -0.35  -0.34  -0.34  -0.33  -0.33  -0.33  -0.33
-    ##  [61]  -0.32  -0.32  -0.32  -0.31  -0.31  -0.30  -0.30  -0.30  -0.29  -0.29
-    ##  [71]  -0.29  -0.28  -0.28  -0.28  -0.28  -0.28  -0.27  -0.27  -0.27  -0.27
-    ##  [81]  -0.27  -0.27  -0.26  -0.26  -0.26  -0.26  -0.25  -0.25  -0.25  -0.25
-    ##  [91]  -0.24  -0.24  -0.24  -0.24  -0.24  -0.23  -0.23  -0.23  -0.23  -0.22
-    ## [101]  -0.22  -0.22  -0.22  -0.22  -0.21  -0.21  -0.21  -0.21  -0.20  -0.20
-    ## [111]  -0.20  -0.19  -0.19  -0.19  -0.19  -0.18  -0.18  -0.18  -0.18  -0.17
-    ## [121]  -0.17  -0.17  -0.17  -0.16  -0.16  -0.15  -0.15  -0.15  -0.14  -0.14
-    ## [131]  -0.13  -0.13  -0.12  -0.11  -0.11  -0.10  -0.09  -0.08  -0.03   0.02
-    ## [141]  62.17
-
-``` r
-sort(round(eigen(diffs.v2)$values, digits = 2))
-```
-
-    ##   [1] -6.98 -2.11 -1.10 -0.97 -0.81 -0.67 -0.65 -0.65 -0.64 -0.58 -0.58
-    ##  [12] -0.55 -0.50 -0.50 -0.47 -0.47 -0.45 -0.44 -0.43 -0.43 -0.42 -0.42
-    ##  [23] -0.40 -0.39 -0.39 -0.39 -0.39 -0.38 -0.38 -0.37 -0.36 -0.35 -0.35
-    ##  [34] -0.35 -0.34 -0.34 -0.33 -0.33 -0.33 -0.32 -0.32 -0.31 -0.31 -0.31
-    ##  [45] -0.30 -0.30 -0.30 -0.30 -0.30 -0.29 -0.29 -0.29 -0.28 -0.28 -0.28
-    ##  [56] -0.28 -0.28 -0.27 -0.27 -0.27 -0.27 -0.27 -0.26 -0.26 -0.26 -0.26
-    ##  [67] -0.26 -0.25 -0.25 -0.25 -0.25 -0.25 -0.25 -0.24 -0.24 -0.24 -0.24
-    ##  [78] -0.24 -0.24 -0.24 -0.23 -0.23 -0.23 -0.22 -0.22 -0.22 -0.22 -0.22
-    ##  [89] -0.22 -0.22 -0.21 -0.21 -0.21 -0.21 -0.21 -0.20 -0.20 -0.20 -0.20
-    ## [100] -0.20 -0.19 -0.19 -0.19 -0.19 -0.19 -0.19 -0.18 -0.18 -0.18 -0.17
-    ## [111] -0.17 -0.17 -0.17 -0.17 -0.16 -0.16 -0.16 -0.15 -0.15 -0.15 -0.15
-    ## [122] -0.15 -0.14 -0.14 -0.14 -0.14 -0.14 -0.14 -0.13 -0.13 -0.13 -0.12
-    ## [133] -0.12 -0.12 -0.11 -0.11 -0.11 -0.11 -0.10 -0.09 48.40
-
-Make distance matrix with diff.v2
-
-``` r
-## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/All_Pop2Int_Loc.txt", header=T)
-names <- indNames(Alla.xOR)
-N = length(names)
-gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
-for(i in 1:nrow(pop2gps)){
-    popmatch <- grep(pop2gps[i,1],names,value=FALSE)
-    for(j in popmatch){
-        gps_matrix[j,2] <- pop2gps$Latitude[i]
-        gps_matrix[j,1] <- pop2gps$Longitude[i]
-    }
-}
-```
-
-Write file for v2
-
-``` r
-write.table(diffs.v2, paste(suf,".v2.diffs",sep=""), col.names = FALSE, row.names = FALSE, quote = FALSE)
-write.table(gps_matrix, paste(suf,".v2.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
-```
-
-Plotting
---------
-
-``` r
-eems.plots(mcmcpath = paste(eems.path,"All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1/",sep=""),
-           plotpath = paste(eems.path,"All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1-plots",sep=""),
-           longlat = T,
-           add.grid=F,
-           add.outline = T,
-           add.demes = T,
-           projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",
-           add.map = T,
-           add.abline = T, 
-           add.r.squared = T)
-```
-
-    ## Input projection: +proj=longlat +datum=WGS84
-    ## Output projection: +proj=merc +datum=WGS84
-
-    ## Loading rgdal (required by projection.in)
-
-    ## Loading rworldmap (required by add.map)
-
-    ## Loading rworldxtra (required by add.map)
-
-    ## Using the default DarkOrange to Blue color scheme, with 'white' as the midpoint color.
-    ## It combines two color schemes from the 'dichromat' package, which itself is based on
-    ## a collection of color schemes for scientific data graphics:
-    ##  Light A and Bartlein PJ (2004). The End of the Rainbow? Color Schemes for Improved Data
-    ##  Graphics. EOS Transactions of the American Geophysical Union, 85(40), 385.
-    ## See also http://geog.uoregon.edu/datagraphics/color_scales.htm
-
-    ## Using 'euclidean' distance to assign interpolation points to Voronoi tiles.
-
-    ## Processing the following EEMS output directories :
-
-    ## ../../c80-denovo/Analysis/EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1/
-
-    ## Plotting effective migration surface (posterior mean of m rates)
-
-    ## ../../c80-denovo/Analysis/EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1/
-
-    ## Error (rgeos):
-    ## The habitat geometry is not a valid ring (a ring is both simple and closed)
-    ## Let the habitat be the rectangle defined by (xmin, ymin) and (xmax, yxmax)
-    ## where xmin, xmax = range(longitude) and ymin, ymax = range(latitude).
-
-    ## Using the default DarkOrange to Blue color scheme, with 'white' as the midpoint color.
-    ## It combines two color schemes from the 'dichromat' package, which itself is based on
-    ## a collection of color schemes for scientific data graphics:
-    ##  Light A and Bartlein PJ (2004). The End of the Rainbow? Color Schemes for Improved Data
-    ##  Graphics. EOS Transactions of the American Geophysical Union, 85(40), 385.
-    ## See also http://geog.uoregon.edu/datagraphics/color_scales.htm
-
-    ## Error (rgeos):
-    ## The habitat geometry is not a valid ring (a ring is both simple and closed)
-    ## Let the habitat be the rectangle defined by (xmin, ymin) and (xmax, yxmax)
-    ## where xmin, xmax = range(longitude) and ymin, ymax = range(latitude).
-
-    ## Plotting effective diversity surface (posterior mean of q rates)
-
-    ## ../../c80-denovo/Analysis/EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1/
-
-    ## Error (rgeos):
-    ## The habitat geometry is not a valid ring (a ring is both simple and closed)
-    ## Let the habitat be the rectangle defined by (xmin, ymin) and (xmax, yxmax)
-    ## where xmin, xmax = range(longitude) and ymin, ymax = range(latitude).
-
-    ## Using the default DarkOrange to Blue color scheme, with 'white' as the midpoint color.
-    ## It combines two color schemes from the 'dichromat' package, which itself is based on
-    ## a collection of color schemes for scientific data graphics:
-    ##  Light A and Bartlein PJ (2004). The End of the Rainbow? Color Schemes for Improved Data
-    ##  Graphics. EOS Transactions of the American Geophysical Union, 85(40), 385.
-    ## See also http://geog.uoregon.edu/datagraphics/color_scales.htm
-
-    ## Error (rgeos):
-    ## The habitat geometry is not a valid ring (a ring is both simple and closed)
-    ## Let the habitat be the rectangle defined by (xmin, ymin) and (xmax, yxmax)
-    ## where xmin, xmax = range(longitude) and ymin, ymax = range(latitude).
-
-    ## Plotting posterior probability trace
-
-    ## ../../c80-denovo/Analysis/EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1/
-
-    ## Plotting average dissimilarities within and between demes
-
-    ## ../../c80-denovo/Analysis/EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1/
+    ## EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1

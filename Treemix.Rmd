@@ -1,0 +1,127 @@
+---
+title: "Treemix- making files and visualization"
+author: "Katherine Silliman"
+output: 
+  github_document:
+    toc: yes
+---
+
+# Make Treemix file
+The MakingFilesR.Rmd notebook details how to make a Treemix input file using Adegenet and a custom python script. 
+
+# Run Treemix
+Can also just be done in Terminal.
+```{r}
+system("treemix -i OL/OL-m70x62-maf025.pop.TM.gz -o OL/OL-m70x62-maf025-pop_unrooted > out")
+```
+## Plot Treemix
+Use plotting functions that come with Treemix.
+```{r}
+source("../../../../General_Methods/treemix-1.13/src/plotting_funcs.R")
+```
+
+```{r}
+plot_tree("OL/OL-m70x62-maf025-pop_unrooted")
+```
+
+```{r}
+plot_resid("OL/OL-m70x62-maf025-pop_unrooted","TMorder")
+```
+
+Possible candidates for admixture: 
+* Tomakes <-> Humboldt
+* North_Bay <-> Humboldt
+* North_Bay <-> Netarts
+* Netarts <-> Liberty
+* Ladysmith <-> Barkeley
+
+```{r}
+system("treemix -i OL/OL-m70x62-maf025.pop.TM.gz -root Klaskino,Barkeley_Sound -o OL/OL-m70x62-maf025-pop_NWBCrooted > out")
+```
+```{r}
+plot_tree("OL/OL-m70x62-maf025-pop_NWBCrooted")
+```
+```{r}
+system("treemix -i OL/OL-m70x62-maf025.pop.TM.gz -root Mugu_Lagoon,San_Diego -o OL/OL-m70x62-maf025-pop_SoCalrooted > out")
+```
+```{r}
+plot_tree("OL/OL-m70x62-maf025-pop_SoCalrooted")
+```
+```{r}
+system("treemix -i OL/OL-m70x62-maf025.pop.TM.gz -root Mugu_Lagoon,San_Diego,Elkhorn_Slough,Tomales,San_Francisco,Humboldt,Netarts,Yaquina,Willapa,Coos -o OL/OL-m70x62-maf025-pop_NSrooted > out")
+```
+```{r}
+plot_tree("OL/OL-m70x62-maf025-pop_NSrooted")
+```
+```{r}
+system("treemix -i OL/OL-m70x62-maf025.pop.TM.gz -root Mugu_Lagoon,San_Diego,Elkhorn_Slough,Tomales,San_Francisco,Humboldt,Netarts,Yaquina,Willapa,Coos -m 1 -o OL/OL-m70x62-maf025-pop_m1 > out")
+```
+```{r}
+plot_tree("OL/OL-m70x62-maf025-pop_m1")
+```
+
+```{r}
+system("treemix -i OL/OL-m70x62-maf025.pop.TM.gz -root Mugu_Lagoon,San_Diego,Elkhorn_Slough,Tomales,San_Francisco,Humboldt,Netarts,Yaquina,Willapa,Coos -m 2 -o OL/OL-m70x62-maf025-pop_m2 > out")
+```
+```{r}
+plot_tree("OL/OL-m70x62-maf025-pop_m2")
+```
+
+```{r}
+system("treemix -i OL/OL-m70x62-maf025.pop.TM.gz -root Mugu_Lagoon,San_Diego,Elkhorn_Slough,Tomales,San_Francisco,Humboldt,Netarts,Yaquina,Willapa,Coos -m 3 -o OL/OL-m70x62-maf025-pop_m3 > out")
+```
+```{r}
+plot_tree("OL/OL-m70x62-maf025-pop_m3")
+```
+# Running Treemix on All
+```{r}
+system("treemix -i All/All-m70x62-mac4.pop.TM.gz -o All/All-m70x62-mac4-pop_unrooted > out")
+```
+```{r}
+plot_tree("All/All-m70x62-mac4-pop_unrooted")
+```
+
+```{r}
+plot_resid("All/All-m70x62-mac4-pop_unrooted","TMorder.All")
+```
+Possible admixture:
+* Conchaphila <-> San_Diego
+* Conchaphila <-> Mugu_Lagoon
+* Conchaphila <-> Elkhorn_Slough
+* Hiumboldt <-> SF
+```{r}
+system("treemix -i All/All-m70x62-mac4.pop.TM.gz -root Conchaphila -o All/All-m70x62-mac4-pop_rooted > out")
+```
+```{r}
+plot_tree("All/All-m70x62-mac4-pop_rooted")
+```
+```{r}
+system("treemix -i All/All-m70x62-mac4.pop.TM.gz -root Conchaphila -m 1 -o All/All-m70x62-mac4-pop_m1 > out")
+```
+```{r}
+plot_tree("All/All-m70x62-mac4-pop_m1")
+```
+```{r}
+system("treemix -i All/All-m70x62-mac4.pop.TM.gz -root Conchaphila -m 2 -o All/All-m70x62-mac4-pop_m2 > out")
+```
+```{r}
+plot_tree("All/All-m70x62-mac4-pop_m2")
+```
+```{r}
+system("treemix -i All/All-m70x62-mac4.pop.TM.gz -root Conchaphila -m 3 -o All/All-m70x62-mac4-pop_m3 > out")
+```
+```{r}
+plot_tree("All/All-m70x62-mac4-pop_m3")
+```
+```{r}
+system("treemix -i All/All-m70x62-mac4.pop.TM.gz -root Conchaphila -m 4 -o All/All-m70x62-mac4-pop_m4 > out")
+```
+```{r}
+plot_tree("All/All-m70x62-mac4-pop_m4")
+```
+```{r}
+system("treemix -i All/All-m70x62-mac4.pop.TM.gz -root Conchaphila -m 5 -o All/All-m70x62-mac4-pop_m5 > out")
+```
+```{r}
+plot_tree("All/All-m70x62-mac4-pop_m5")
+```

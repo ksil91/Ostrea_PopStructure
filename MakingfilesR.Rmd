@@ -1,7 +1,9 @@
 ---
 title: "Making files for other programs"
-output: github_document
-  toc: true
+author: "Katherine Silliman"
+output: 
+  github_document:
+    toc: yes
 ---
 
 # Load adegenet objects
@@ -20,9 +22,9 @@ all.g.ind
 # Make input for OutFLANK
 ```{r}
 #Write file with allele counts per individual for OutFLANK
-write.table(g.indF@tab, file = "../Outlier/OL-66-m70x62-maf025.tab",sep = "\t",row.names = T,col.names = T,quote = F )
-write.table(strata(g.indF)$Population, file = "../Outlier/OL-66-m70x62-maf025.pop",sep = "\t",row.names = F,col.names = F,quote = F )
-write.table(strata(g.indF)$Region, file = "../Outlier/OL-66-m70x62-maf025.regs",sep = "\t",row.names = F,col.names = F,quote = F )
+write.table(g.indF@tab, file = "Outlier/OL-66-m70x62-maf025.tab",sep = "\t",row.names = T,col.names = T,quote = F )
+write.table(strata(g.indF)$Population, file = "Outlier/OL-66-m70x62-maf025.pop",sep = "\t",row.names = F,col.names = F,quote = F )
+write.table(strata(g.indF)$Region, file = "Outlier/OL-66-m70x62-maf025.regs",sep = "\t",row.names = F,col.names = F,quote = F )
 ```
 
 # Make Treemix file
@@ -172,122 +174,14 @@ write.table(diffs.v1, paste(suf,".v1.diffs",sep=""),
             col.names = FALSE, row.names = FALSE, quote = FALSE)
 write.table(gps_matrix, paste(suf,".v1.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
 ```
+## Plot EEMS
 After running, plot EEMS output:
 ```{r}
-library(rEEMSplots)
+library(rEEMSplots) #Get from EEMS github
 library(rgdal)
 library(rworldmap)
 library(rworldxtra)
 ```
 ```{r}
 eems.plots(mcmcpath = "EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1", plotpath = "EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1-plots",longlat = T,add.grid=F,add.outline = T,add.demes = T,projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",add.map = T,add.abline = T, add.r.squared = T)
-```
-
-# All
-## Make an EEMS file
-```{r}
-All.xOR <- All.g.indm70[!(indNames(All.g.indm70) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
-suf <- "EEMS/All-m70x62-mac4-xOR1"
-geno <- All.xOR@tab
-stopifnot(identical(All.xOR@type, 'codom'))
-# Get rid of non-biallelic loci
-multi.loci <- names(which(All.xOR@loc.n.all != 2))
-multi.cols <- which(grepl(paste0("^", multi.loci, "\\.\\d+$", collapse = "|"), colnames(geno)))
-if (length(multi.cols)) geno <- geno[, - multi.cols]
-nloci <- dim(geno)[2] / 2
-#Choose allele to be "derived" allele.
-geno <- geno[, c(seq(1,ncol(geno),by = 2))]
-
-dim(geno)
-```
-
-```{r}
-# 138 inds, 9,322 loci
-#bed2diffs functions  
-diffs.v1 <- bed2diffs_v1(geno)
-diffs.v2 <- bed2diffs_v2(geno)
-diffs.v1 <- round(diffs.v1, digits = 6)
-diffs.v2 <- round(diffs.v2, digits = 6)
-```
-Check that the dissimilarity matrix has one positive eigenvalue and nIndiv-1 negative eigenvalues, as required by a full-rank Euclidean distance matrix.
-```{r}
-sort(round(eigen(diffs.v1)$values, digits = 2))
-sort(round(eigen(diffs.v2)$values, digits = 2))
-```
-Make distance matrix with diff.v2
-```{r}
-## Get gps coordinates.
-pop2gps <- read.table(file = "../Making_Files/All_Pop2Int_Loc.txt", header=T)
-names <- indNames(All.xOR)
-N = length(names)
-gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
-for(i in 1:nrow(pop2gps)){
-    popmatch <- grep(pop2gps[i,1],names,value=FALSE)
-    for(j in popmatch){
-        gps_matrix[j,2] <- pop2gps$Latitude[i]
-        gps_matrix[j,1] <- pop2gps$Longitude[i]
-    }
-}
-```
-Write file for v2
-```{r}
-write.table(diffs.v2, paste(suf,"v2.diffs",sep=""), 
-            col.names = FALSE, row.names = FALSE, quote = FALSE)
-write.table(gps_matrix, paste(suf,"v2.coord",sep="."),col.names = FALSE, row.names = FALSE,quote = FALSE)
-```
-
-```{r}
-Alla.xOR <- all.g.ind[!(indNames(all.g.ind) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
-suf <- "EEMS/Allall-m70x62-mac4-xOR1"
-geno <- Alla.xOR@tab
-stopifnot(identical(Alla.xOR@type, 'codom'))
-# Get rid of non-biallelic loci
-multi.loci <- names(which(Alla.xOR@loc.n.all != 2))
-multi.cols <- which(grepl(paste0("^", multi.loci, "\\.\\d+$", collapse = "|"), colnames(geno)))
-if (length(multi.cols)) geno <- geno[, - multi.cols]
-nloci <- dim(geno)[2] / 2
-#Choose allele to be "derived" allele.
-geno <- geno[, c(seq(1,ncol(geno),by = 2))]
-
-dim(geno)
-```
-
-```{r}
-# 141 inds, 9,322 loci
-#bed2diffs functions  
-diffs.v1 <- bed2diffs_v1(geno)
-diffs.v2 <- bed2diffs_v2(geno)
-diffs.v1 <- round(diffs.v1, digits = 6)
-diffs.v2 <- round(diffs.v2, digits = 6)
-```
-Check that the dissimilarity matrix has one positive eigenvalue and nIndiv-1 negative eigenvalues, as required by a full-rank Euclidean distance matrix.
-```{r}
-sort(round(eigen(diffs.v1)$values, digits = 2))
-sort(round(eigen(diffs.v2)$values, digits = 2))
-```
-Make distance matrix with diff.v2
-```{r}
-## Get gps coordinates.
-pop2gps <- read.table(file = "../Making_Files/All_Pop2Int_Loc.txt", header=T)
-names <- indNames(Alla.xOR)
-N = length(names)
-gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
-for(i in 1:nrow(pop2gps)){
-    popmatch <- grep(pop2gps[i,1],names,value=FALSE)
-    for(j in popmatch){
-        gps_matrix[j,2] <- pop2gps$Latitude[i]
-        gps_matrix[j,1] <- pop2gps$Longitude[i]
-    }
-}
-```
-Write file for v2
-```{r}
-write.table(diffs.v2, paste(suf,".v2.diffs",sep=""), 
-            col.names = FALSE, row.names = FALSE, quote = FALSE)
-write.table(gps_matrix, paste(suf,".v2.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
-```
-
-## Plotting
-```{r}
-eems.plots(mcmcpath = "EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI-nD200-ch1/", plotpath = "EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI-nD200-ch1-plots",longlat = T,add.grid=F,add.outline = T,add.demes = T,projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",add.map = T,add.abline = T, add.r.squared = T)
 ```
