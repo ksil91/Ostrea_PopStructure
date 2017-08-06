@@ -1,90 +1,42 @@
 ---
-title: "Making Files and EEMS"
-author: "Katherine Silliman"
-output: 
-  github_document:
-    toc: yes
+title: "Making files for other programs"
+output: github_document
+  toc: true
 ---
 
-This is an Rmarkdown file to take a genind object from Adegenet and create output files for other programs. It also creates plots for EEMS.
 # Load adegenet objects
 ```{r}
-load("../../c80-denovo/Analysis/PCA/OL-c80-66-s67-m70x62-maf025-u.adegenet")
-```
-```{r, include=F}
-load("../../c80-denovo/Analysis/PCA/All-c80-66-m70x62-mac4.adegenet")
-load("../../c80-denovo/Analysis/PCA/All5C-c80-66-s67-m70x62-mac4-u.adegenet")
-```
-
-Genind object with only *Ostrea lurida* individuals
-```{r}
+load("PCA/OL-c80-66-s67-m70x62-maf025-u.adegenet")
+load("PCA/All5C-c80-66-s67-m70x62-mac4-u.adegenet")
+load("PCA/All-c80-66-m70x62-mac4.adegenet")
 g.indF
 ```
-
-```{r,include=F}
-#Genind object with both *Ostrea lurida* and *Ostrea conchaphila* samples, including 3 *O. conchaphila* samples with few recovered loci.
-all.g.ind
+```{r}
 All.g.indm70
 ```
-# Make input for OutFLANK
-[OutFLANK](https://github.com/whitlock/OutFLANK) is an R package by M. Whitlock and K. Lotterhos for detecting outlier loci. I find it is very conservative compared to other programs. This code saves a matrix of allele counts per individual, which is then read into OutFLANK in a different notebook. It also saves a file with population designations and region designations, for input into OutFLANK.
 ```{r}
-#For O. lurida only
-#Write file with allele counts per individual for OutFLANK
-write.table(g.indF@tab, file = "../../c80-denovo/Analysis/Outlier/OL-66-m70x62-maf025.tab",sep = "\t",row.names = T,col.names = T,quote = F )
-#Save file with population of each individual
-write.table(strata(g.indF)$Population, file = "../../c80-denovo/Analysis/Outlier/OL-66-m70x62-maf025.pop",sep = "\t",row.names = F,col.names = F,quote = F )
-#Save file with region of each individual
-write.table(strata(g.indF)$Region, file = "../../c80-denovo/Analysis/Outlier/OL-66-m70x62-maf025.regs",sep = "\t",row.names = F,col.names = F,quote = F )
+all.g.ind
 ```
-```{r, include=F}
-#For O. lurida plus O. conchaphila
+# Make input for OutFLANK
+```{r}
 #Write file with allele counts per individual for OutFLANK
-write.table(All.g.indm70@tab, file = "../../c80-denovo/Analysis/Outlier/All5C-66-m70x62-mac4.tab",sep = "\t",row.names = T,col.names = T,quote = F )
-#Save file with population of each individual
-write.table(strata(All.g.indm70)$Population, file = "../../c80-denovo/Analysis/Outlier/All5C-66-m70x62-mac4.pop",sep = "\t",row.names = F,col.names = F,quote = F )
-#Save file with region of each individual
-write.table(strata(All.g.indm70)$Region, file = "../../c80-denovo/Analysis/Outlier/All5C-66-m70x62-mac4.reg",sep = "\t",row.names = F,col.names = F,quote = F )
-
-#Write file with allele counts per individual for OutFLANK
-write.table(all.g.ind@tab, file = "../../c80-denovo/Analysis/Outlier/All-66-m70x62-mac4.tab",sep = "\t",row.names = T,col.names = T,quote = F )
-#Save file with population of each individual
-write.table(strata(all.g.ind)$Population, file = "../../c80-denovo/Analysis/Outlier/All-66-m70x62-mac4.pop",sep = "\t",row.names = F,col.names = F,quote = F )
-#Save file with region of each individual
-write.table(strata(all.g.ind)$Region, file = "../../c80-denovo/Analysis/Outlier/All-66-m70x62-mac4.reg",sep = "\t",row.names = F,col.names = F,quote = F )
+write.table(g.indF@tab, file = "../Outlier/OL-66-m70x62-maf025.tab",sep = "\t",row.names = T,col.names = T,quote = F )
+write.table(strata(g.indF)$Population, file = "../Outlier/OL-66-m70x62-maf025.pop",sep = "\t",row.names = F,col.names = F,quote = F )
+write.table(strata(g.indF)$Region, file = "../Outlier/OL-66-m70x62-maf025.regs",sep = "\t",row.names = F,col.names = F,quote = F )
 ```
 
 # Make Treemix file
-[Treemix](https://bitbucket.org/nygcresearch/treemix/wiki/Home) infers population splits and mixtures, assuming an underlying tree-like model. This code converts a genind object to a genpop object, saves that to a file, then uses a custom python script to convert it into Treemix format. See Treemix notebook for running and plotting Treemix.
 ```{r}
-#Convert to genpop
-treemix.path <- "../../c80-denovo/Analysis/Treemix/"
 OL.gp <- genind2genpop(g.indF,pop=strata(g.indF)$Population)
-write.table(OL.gp$tab, file=paste(treemix.path,"OL/OL-m70x62-maf025.gp",sep = ""), sep = "\t",row.names = T,col.names = T,quote = F )
-#Run genpop2Treemix.py script to make Treemix input and gzip
-system('python ../../Methods/Scripts/genpop2Treemix.py ../../c80-denovo/Analysis/Treemix/OL/OL-m70x62-maf025.gp ../../c80-denovo/Analysis/Treemix/OL/OL-m70x62-maf025.TM.txt')
-system('gzip ../../c80-denovo/Analysis/Treemix/OL/OL-m70x62-maf025.TM.txt')
+write.table(OL.gp$tab, file="Treemix/OL-m70x62-maf025.gp",sep = "\t",row.names = T,col.names = T,quote = F )
+system('python ../../Methods/Scripts/genpop2Treemix.py Treemix/OL-m70x62-maf025.gp Treemix/OL-m70x62-maf025.TM.txt')
+system('gzip Treemix/OL-m70x62-maf025.TM.txt')
 ```
-```{r, include=F}
-Allm70.gp <- genind2genpop(All.g.indm70,pop=strata(All.g.indm70)$Population)
-write.table(Allm70.gp$tab, file=paste(treemix.path,"All/All5C-m70x62-mac4.gp",sep=""),sep = "\t",row.names = T,col.names = T,quote = F )
-#Run genpop2Treemix.py script to make Treemix input and gzip
-system('python ../../Methods/Scripts/genpop2Treemix.py ../../c80-denovo/Analysis/Treemix/All/All5C-m70x62-mac4.gp ../../c80-denovo/Analysis/Treemix/All/All5C-m70x62-mac4.TM.txt')
-system('gzip ../../c80-denovo/Analysis/Treemix/All/All5C-m70x62-mac4.TM.txt')
-
-All.gp <- genind2genpop(all.g.ind,pop=strata(all.g.ind)$Population)
-write.table(All.gp$tab, file=paste(treemix.path,"All/All-m70x62-mac4.gp",sep=""),sep = "\t",row.names = T,col.names = T,quote = F )
-#Run genpop2Treemix.py script to make Treemix input and gzip
-system('python ../../Methods/Scripts/genpop2Treemix.py ../../c80-denovo/Analysis/Treemix/All/All-m70x62-mac4.gp ../../c80-denovo/Analysis/Treemix/All/All-m70x62-mac4.TM.txt')
-system('gzip ../../c80-denovo/Analysis/Treemix/All/All-m70x62-mac4.TM.txt')
-```
-
 # Make an EEMS file
-## O. lurida - with OR1
-Taking a genind object and creating two of the input files for [EEMS](https://github.com/dipetkov/eems). The .outer file is made separately and given the same suffix.
+## OL- with OR
+
 ```{r}
-eems.path <- "../../c80-denovo/Analysis/EEMS/"
-suf <- paste(eems.path,"OL-m70x62-maf025",sep="")
+suf <- "EEMS/OL-m70x62-maf025"
 geno <- g.indF@tab
 stopifnot(identical(g.indF@type, 'codom'))
 # Get rid of non-biallelic loci
@@ -94,12 +46,10 @@ if (length(multi.cols)) geno <- geno[, - multi.cols]
 nloci <- dim(geno)[2] / 2
 #Choose allele to be "derived" allele.
 geno <- geno[, c(seq(1,ncol(geno),by = 2))]
-```
-The number of individuals and SNPs in matrix geno.
-```{r}
+
 dim(geno)
 ```
-bed2diff functions, taken from EEMS documentation.
+bed2diff functions
 ```{r}
 bed2diffs_v1 <- function(Geno) {
   nIndiv <- nrow(Geno)
@@ -135,7 +85,7 @@ bed2diffs_v2 <- function(Geno) {
   Diffs
 }
 ```
-Creating both v1 and v2 dissimilarity matrices.
+
 ```{r}
 # 137 inds, 9,170 loci
 #bed2diffs functions  
@@ -149,14 +99,10 @@ Check that the dissimilarity matrix has one positive eigenvalue and nIndiv-1 neg
 sort(round(eigen(diffs.v1)$values, digits = 2))
 sort(round(eigen(diffs.v2)$values, digits = 2))
 ```
-Make matrix with GPS coordinates for each individual. Uses a file with strata information for each population identifier:
-```{r}
-system('cat ../../c80-denovo/Making_Files/OLPop2Int_Loc.txt')
-```
-
+Make distance matrix
 ```{r}
 ## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/OLPop2Int_Loc.txt", header=T)
+pop2gps <- read.table(file = "../Making_Files/OLPop2Int_Loc.txt", header=T)
 names <- indNames(g.indF)
 N = length(names)
 gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
@@ -168,19 +114,17 @@ for(i in 1:nrow(pop2gps)){
     }
 }
 ```
-Write file preferentially for v1 matrix, if it is Euclidean. Save these with the same suffix.
+Write file for v1
 ```{r}
 write.table(diffs.v1, paste(suf,".v1.diffs",sep=""), 
             col.names = FALSE, row.names = FALSE, quote = FALSE)
 write.table(gps_matrix, paste(suf,".v1.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
 ```
-## O. lurida - without OR1
-Excluding Coos Bay OR samples, as these are likely transplants from Willapa Bay and mess up the model.
+
 ```{r}
-#Excluding Coos Bay samples
 gind.xOR <- g.indF[!(indNames(g.indF) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
 
-suf <- paste(eems.path,"OL-m70x62-maf025-xOR1",sep="")
+suf <- "EEMS/OL-m70x62-maf025-xOR1"
 geno <- gind.xOR@tab
 stopifnot(identical(gind.xOR@type, 'codom'))
 # Get rid of non-biallelic loci
@@ -210,7 +154,7 @@ sort(round(eigen(diffs.v2)$values, digits = 2))
 Make distance matrix
 ```{r}
 ## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/OLPop2Int_Loc.txt", header=T)
+pop2gps <- read.table(file = "../Making_Files/OLPop2Int_Loc.txt", header=T)
 names <- indNames(gind.xOR)
 N = length(names)
 gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
@@ -224,7 +168,8 @@ for(i in 1:nrow(pop2gps)){
 ```
 Write file for v1
 ```{r}
-write.table(diffs.v1, paste(suf,".v1.diffs",sep=""),col.names = FALSE, row.names = FALSE, quote = FALSE)
+write.table(diffs.v1, paste(suf,".v1.diffs",sep=""), 
+            col.names = FALSE, row.names = FALSE, quote = FALSE)
 write.table(gps_matrix, paste(suf,".v1.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
 ```
 After running, plot EEMS output:
@@ -235,23 +180,14 @@ library(rworldmap)
 library(rworldxtra)
 ```
 ```{r}
-eems.plots(mcmcpath = paste(eems.path,"OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1",sep=""), 
-           plotpath = paste(eems.path,"OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1-plots",sep=""),
-           longlat = T,
-           add.grid=F,
-           add.outline = T,
-           add.demes = T,
-           projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",
-           add.map = T,
-           add.abline = T, 
-           add.r.squared = T)
+eems.plots(mcmcpath = "EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1", plotpath = "EEMS/OL-c80-m70x62-maf025-xOR1_results/OL-m70x62maf025-xOR1-nD400-ch1-plots",longlat = T,add.grid=F,add.outline = T,add.demes = T,projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",add.map = T,add.abline = T, add.r.squared = T)
 ```
 
 # All
 ## Make an EEMS file
 ```{r}
 All.xOR <- All.g.indm70[!(indNames(All.g.indm70) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
-suf <- paste(eems.path,"All-m70x62-mac4-xOR1",sep="")
+suf <- "EEMS/All-m70x62-mac4-xOR1"
 geno <- All.xOR@tab
 stopifnot(identical(All.xOR@type, 'codom'))
 # Get rid of non-biallelic loci
@@ -281,7 +217,7 @@ sort(round(eigen(diffs.v2)$values, digits = 2))
 Make distance matrix with diff.v2
 ```{r}
 ## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/All_Pop2Int_Loc.txt", header=T)
+pop2gps <- read.table(file = "../Making_Files/All_Pop2Int_Loc.txt", header=T)
 names <- indNames(All.xOR)
 N = length(names)
 gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
@@ -295,13 +231,14 @@ for(i in 1:nrow(pop2gps)){
 ```
 Write file for v2
 ```{r}
-write.table(diffs.v2, paste(suf,"v2.diffs",sep=""), col.names = FALSE, row.names = FALSE, quote = FALSE)
+write.table(diffs.v2, paste(suf,"v2.diffs",sep=""), 
+            col.names = FALSE, row.names = FALSE, quote = FALSE)
 write.table(gps_matrix, paste(suf,"v2.coord",sep="."),col.names = FALSE, row.names = FALSE,quote = FALSE)
 ```
 
 ```{r}
 Alla.xOR <- all.g.ind[!(indNames(all.g.ind) %in% c("OR1_1","OR1_7","OR1_11","OR1_12","OR1_1B_6","OR1_2","OR1_3","OR1_4","OR1_5","OR1_6","OR1_7w_6")),drop=TRUE]
-suf <- paste(eems.path,"Allall-m70x62-mac4-xOR1",sep="")
+suf <- "EEMS/Allall-m70x62-mac4-xOR1"
 geno <- Alla.xOR@tab
 stopifnot(identical(Alla.xOR@type, 'codom'))
 # Get rid of non-biallelic loci
@@ -331,7 +268,7 @@ sort(round(eigen(diffs.v2)$values, digits = 2))
 Make distance matrix with diff.v2
 ```{r}
 ## Get gps coordinates.
-pop2gps <- read.table(file = "../../c80-denovo/Making_Files/All_Pop2Int_Loc.txt", header=T)
+pop2gps <- read.table(file = "../Making_Files/All_Pop2Int_Loc.txt", header=T)
 names <- indNames(Alla.xOR)
 N = length(names)
 gps_matrix = matrix(data = NA, nrow = N, ncol = 2)
@@ -345,20 +282,12 @@ for(i in 1:nrow(pop2gps)){
 ```
 Write file for v2
 ```{r}
-write.table(diffs.v2, paste(suf,".v2.diffs",sep=""), col.names = FALSE, row.names = FALSE, quote = FALSE)
+write.table(diffs.v2, paste(suf,".v2.diffs",sep=""), 
+            col.names = FALSE, row.names = FALSE, quote = FALSE)
 write.table(gps_matrix, paste(suf,".v2.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
 ```
 
 ## Plotting
 ```{r}
-eems.plots(mcmcpath = paste(eems.path,"All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1/",sep=""),
-           plotpath = paste(eems.path,"All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI2-nD300-ch1-plots",sep=""),
-           longlat = T,
-           add.grid=F,
-           add.outline = T,
-           add.demes = T,
-           projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",
-           add.map = T,
-           add.abline = T, 
-           add.r.squared = T)
+eems.plots(mcmcpath = "EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI-nD200-ch1/", plotpath = "EEMS/All-c80-m70x62-mac4-xOR1_results/Allall-m70x62mac4-xOR1-SkI-nD200-ch1-plots",longlat = T,add.grid=F,add.outline = T,add.demes = T,projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",add.map = T,add.abline = T, add.r.squared = T)
 ```
