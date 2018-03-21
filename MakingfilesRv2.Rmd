@@ -1,0 +1,220 @@
+---
+title: "Making files for other programs"
+author: "Katherine Silliman"
+output: 
+  github_document:
+    toc: yes
+---
+R Notebook detailing how I take a filtered .vcf file from ipyrad and turn it into other formats for population genetic analyses.
+```{r}
+filtsuf = "OL-c80-66-s67-m70x62-maf025"
+```
+
+#Make .genind object for PCA and other conversions
+Uses radiator package by 
+```{r,message=FALSE}
+library("adegenet") #inputting genetic data from structure, PCA, DAPC
+library("radiator") #Conversion from vcf to a lot of other formats
+library("dplyr")
+```
+```{r}
+rad.maf <- vcf2genind(paste(filtsuf,"-u.vcf",sep=""),filename=paste(filtsuf,"-maf025-u",sep=""),common.markers = F, strata="OL-c80-66-s67.strata", pop.levels = c("Klaskino","Barkeley_Sound","Ladysmith","Victoria","Discovery_Bay","Liberty_Bay","North_Bay","Triton_Cove","Willapa","Netarts","Yaquina","Coos","Humboldt","Tomales","San_Francisco","Elkhorn_Slough","Mugu_Lagoon","San_Diego"),parallel.core = 2)
+```
+```{r}
+info <- as.data.frame(read.table("OL-c80-66-s67.strata",header = T,sep = "\t",stringsAsFactors = F))
+
+mystrats <- as.data.frame(matrix(,nrow = length(indNames(rad.maf$genind.no.imputation)),ncol=5))
+colnames(mystrats) <- c("POPULATION","REGION","NS","LATITUDE","LONGITUDE")
+
+for(i in 1:nrow(info)){
+    j <- grep(gsub("_","-",info[i,1]),indNames(rad.maf$genind.no.imputation),value=FALSE)
+    mystrats[j,1] <-info$STRATA[i] 
+    mystrats[j,2] <-info$REGION[i]
+    mystrats[j,3] <-info$NS[i]
+    mystrats[j,4] <-info$LATITUDE[i]
+    mystrats[j,5] <-info$LONGITUDE[i]
+}
+just.strats <- select(mystrats,c("POPULATION","REGION","NS"))
+stratted <- strata(rad.maf$genind.no.imputation, formula= ~NS/REGION/POPULATION, combine = TRUE,just.strats)
+stratted@other <- select(mystrats, LATITUDE,LONGITUDE)
+```
+
+```{r}
+save(stratted, file=paste(filtsuf,"-u.genind",sep=""))
+```
+
+#Make input for Structure from .vcf file.
+```{r,message=FALSE}
+write_structure(rad.maf$tidy.data, filename=paste(filtsuf,"-u",sep=""))
+```
+#Make input for Bayescan
+```{r}
+x <- write_bayescan(rad.maf$tidy.data, filename=paste(filtsuf,"-u-BS",sep=""))
+```
+# Make input for OutFLANK
+```{r}
+#Write file with allele counts per individual for OutFLANK
+write.table(stratted@tab, file = paste(filtsuf,"-u.tab",sep=""),sep = "\t",row.names = T,col.names = T,quote = F )
+#Write 2 files with different strata levels
+write.table(strata(stratted)$POPULATION, file = paste(filtsuf,".pop",sep=""),sep = "\t",row.names = F,col.names = F,quote = F )
+write.table(strata(stratted)$REGION, file = paste(filtsuf,".reg",sep=""),sep = "\t",row.names = F,col.names = F,quote = F )
+```
+
+# Make Treemix file
+```{r}
+OL.gp <- genind2genpop(stratted,pop=strata(stratted)$POPULATION)
+write.table(OL.gp$tab, file=paste(filtsuf,"-u.gp",sep=""),sep = "\t",row.names = T,col.names = T,quote = F )
+system('python ../Scripts/genpop2Treemix.py OL-c80-66-s67-m70x62-maf025-u.gp OL-m70x62-maf025.pop.TM')
+system('gzip OL-m70x62-maf025.pop.TM')
+```
+# Make an EEMS file
+## OL- with OR
+
+```{r}
+suf <- "OL-m70x62-maf025"
+geno <- stratted@tab
+stopifnot(identical(stratted@type, 'codom'))
+# Get rid of non-biallelic loci
+multi.loci <- names(which(stratted@loc.n.all != 2))
+multi.cols <- which(grepl(paste0("^", multi.loci, "\\.\\d+$", collapse = "|"), colnames(geno)))
+if (length(multi.cols)) geno <- geno[, - multi.cols]
+nloci <- dim(geno)[2] / 2
+#Choose allele to be "derived" allele.
+geno <- geno[, c(seq(1,ncol(geno),by = 2))]
+
+dim(geno)
+```
+bed2diff functions
+```{r}
+bed2diffs_v1 <- function(Geno) {
+  nIndiv <- nrow(Geno)
+  nSites <- ncol(Geno)
+  Diffs <- matrix(0, nIndiv, nIndiv)
+  
+  for (i in seq(nIndiv - 1)) {
+    for (j in seq(i + 1, nIndiv)) {
+      x <- Geno[i, ]
+      y <- Geno[j, ]
+      Diffs[i, j] <- mean((x - y)^2, na.rm = TRUE)
+      Diffs[j, i] <- Diffs[i, j]
+    }
+  }
+  Diffs
+}
+bed2diffs_v2 <- function(Geno) {
+  nIndiv <- nrow(Geno)
+  nSites <- ncol(Geno)
+  Miss <- is.na(Geno)
+  ## Impute NAs with the column means (= twice the allele frequencies)
+  Mean <- matrix(colMeans(Geno, na.rm = TRUE), ## a row of means
+                 nrow = nIndiv, ncol = nSites, byrow = TRUE) ## a matrix with nIndiv identical rows of means
+  Mean[Miss == 0] <- 0 ## Set the means that correspond to observed genotypes to 0
+  Geno[Miss == 1] <- 0 ## Set the missing genotypes to 0 (used to be NA) 
+  Geno <- Geno + Mean
+  ## Compute similarities
+  Sim <- Geno %*% t(Geno) / nSites
+  SelfSim <- diag(Sim) ## self-similarities
+  vector1s <- rep(1, nIndiv) ## vector of 1s
+  ## This chunk generates a `diffs` matrix
+  Diffs <- SelfSim %*% t(vector1s) + vector1s %*% t(SelfSim) - 2 * Sim
+  Diffs
+}
+```
+
+```{r}
+# 137 inds, 9,170 loci
+#bed2diffs functions  
+diffs.v1 <- bed2diffs_v1(geno)
+diffs.v2 <- bed2diffs_v2(geno)
+diffs.v1 <- round(diffs.v1, digits = 6)
+diffs.v2 <- round(diffs.v2, digits = 6)
+```
+Check that the dissimilarity matrix has one positive eigenvalue and nIndiv-1 negative eigenvalues, as required by a full-rank Euclidean distance matrix.
+```{r}
+sort(round(eigen(diffs.v1)$values, digits = 2))
+sort(round(eigen(diffs.v2)$values, digits = 2))
+```
+V1 is Euclidean, use this matrix.
+
+Make list of GPS coordinates per individual.
+```{r}
+## Get gps coordinates.
+gps_matrix <- select(mystrats,c("LONGITUDE","LATITUDE"))
+```
+Write file for v1
+```{r}
+write.table(diffs.v1, paste(suf,".v1.diffs",sep=""), 
+            col.names = FALSE, row.names = FALSE, quote = FALSE)
+write.table(gps_matrix, paste(suf,".v1.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
+```
+## OL - Without Coos Bay
+Coos Bay is a recent transplant from Willapa Bay, so I exclude it from my EEMS analyses.
+```{r}
+gind.xOR <- stratted[!(indNames(stratted) %in% c("OR1-11","OR1-1","OR1-2","OR1-4","OR1-5","OR1-6","OR1-7")),drop=TRUE]
+
+suf <- "OL-xOR1-m70x62-maf025"
+geno <- gind.xOR@tab
+stopifnot(identical(gind.xOR@type, 'codom'))
+# Get rid of non-biallelic loci
+multi.loci <- names(which(gind.xOR@loc.n.all != 2))
+multi.cols <- which(grepl(paste0("^", multi.loci, "\\.\\d+$", collapse = "|"), colnames(geno)))
+if (length(multi.cols)) geno <- geno[, - multi.cols]
+nloci <- dim(geno)[2] / 2
+#Choose allele to be "derived" allele.
+geno <- geno[, c(seq(1,ncol(geno),by = 2))]
+
+dim(geno)
+```
+
+```{r}
+# 130 inds, 9,170 loci
+#bed2diffs functions  
+diffs.v1 <- bed2diffs_v1(geno)
+diffs.v2 <- bed2diffs_v2(geno)
+diffs.v1 <- round(diffs.v1, digits = 6)
+diffs.v2 <- round(diffs.v2, digits = 6)
+```
+Check that the dissimilarity matrix has one positive eigenvalue and nIndiv-1 negative eigenvalues, as required by a full-rank Euclidean distance matrix.
+```{r}
+sort(round(eigen(diffs.v1)$values, digits = 2))
+sort(round(eigen(diffs.v2)$values, digits = 2))
+```
+Make GPS coordinate file. Note it is a little different than when we had all individuals.
+```{r}
+## Get gps coordinates.
+xOR.info <- dplyr::filter(info, !grepl("OR1",INDIVIDUALS))
+gps_matrix <- matrix(,nrow = length(indNames(gind.xOR)),ncol=2)
+
+for(i in 1:nrow(xOR.info)){
+    j <- grep(gsub("_","-",xOR.info[i,1]),indNames(gind.xOR),value=FALSE)
+    gps_matrix[j,1] <-xOR.info$LONGITUDE[i]
+    gps_matrix[j,2] <-xOR.info$LATITUDE[i]
+}
+```
+Write file for v1
+```{r}
+write.table(diffs.v1, paste(suf,".v1.diffs",sep=""), 
+            col.names = FALSE, row.names = FALSE, quote = FALSE)
+write.table(gps_matrix, paste(suf,".v1.coord",sep=""),col.names = FALSE, row.names = FALSE,quote = FALSE)
+```
+
+## Plot EEMS
+After running EEMS, plot EEMS output:
+```{r}
+library(rEEMSplots) #Get from EEMS github
+library(rgdal)
+library(rworldmap)
+library(rworldxtra)
+```
+
+
+Make a list of all EEMS directories to plot all the results into 1 plot:
+```{r}
+dirs = c("OLxOR1-m70x62maf025-SkI-nD200-ch1","OLxOR1-m70x62maf025-SkI-nD200-ch2", "OLxOR1-m70x62maf025-SkI-nD300-ch1","OLxOR1-m70x62maf025-SkI-nD300-ch2","OLxOR1-m70x62maf025-SkI-nD350-ch1","OLxOR1-m70x62maf025-SkI-nD350-ch2","OLxOR1-m70x62maf025-SkI-nD400-ch1","OLxOR1-m70x62maf025-SkI-nD400-ch2","OLxOR1-m70x62maf025-SkI-nD500-ch1","OLxOR1-m70x62maf025-SkI-nD500-ch2","OLxOR1-m70x62maf025-SkI-nD600-ch1","OLxOR1-m70x62maf025-SkI-nD600-ch2")
+```
+
+**This command does not run well in Notebook. Run in R console**.
+```{r}
+#eems.plots(mcmcpath = dirs, plotpath = "OLxOR1-m70x62maf025-SkI-All-plots",longlat = T,add.grid=F,add.outline = T,add.demes = T,projection.in = "+proj=longlat +datum=WGS84",projection.out = "+proj=merc +datum=WGS84",add.map = T,add.abline = T, add.r.squared = T)
+```
+
