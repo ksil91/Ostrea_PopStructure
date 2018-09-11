@@ -1,5 +1,5 @@
 # Ostrea_PopStructure
-This repository contains code and notebooks detailing analyses of Genotype-by-Sequencing (GBS) data in the Olympia oyster (*Ostrea lurida*). These notebooks are a work in progress, so may change often as I clearly annotate them and decide on methodological approaches. Once the paper is published this fall, this repository will hold all final, annotated notebooks for analyses presented in the paper.
+This repository contains code and notebooks detailing analyses of Genotype-by-Sequencing (GBS) data in the Olympia oyster (*Ostrea lurida*). These notebooks currently detail the analyses presented in the preprint, but are a work in progress as I work to annotate them clearly. Experienced users of R may still find them useful. Once the paper is published this fall, this repository will hold all final, annotated notebooks for analyses presented in the paper.
 
 ## Scripts folder
 The Scripts folder has various scripts for filtering loci and converting file formats, including subsetSNPs.py for selecting one SNP per GBS loci from a .vcf file and .spid files for PGD Spider.
