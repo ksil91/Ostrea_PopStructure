@@ -7,10 +7,12 @@ The Scripts folder has various scripts for filtering loci and converting file fo
 ## Analysis folder
 * OutlierR.ipynb: R Jupyter notebook detailing detection of outlier loci using OUTFlank, Bayescan, and pcadapt. 
 * PCA_x45m75.ipynb: R Jupyter notebook detailing how to make PCA plots from an Adegenet object using Adegenet and pcaviz.
-* Fst.ipynb: R Jupyter notebook detailing how to calculate pairwise Fst across all populations and make a heatmap of the values, as well as conduct a Mantel text of water distance and F_{ST} Also calculates basic popgen stats like heterozygosity.
+* Fst.ipynb: R Jupyter notebook detailing how to calculate pairwise Fst across all populations and make a heatmap of the values, as well as conduct a Mantel text of water distance and FST Also calculates basic popgen stats like heterozygosity.
+* TreeMix.ipynbL R Jupyter notebook for plotting output of TreeMix and evaluating model fit for different numbers of migration events.
 
 ## Making_Files folder
-Folder with notebooks on how to filter a .vcf file from ipyrad for low coverage individuals, excess heterozygosity, and missing data, using a combination of VCFTools and custom scripts. **Filtering_VCF.ipynb** is the most up to date version.
+*  **Filtering_VCF.ipynb**: Notebook on how to filter a .vcf file from ipyrad for excess heterozygosit, and missing data, using a combination of VCFTools and custom scripts.
+*  **MakingFilesR.ipynb**: Jupyter R notebook for converting a .vcf file into input files for various popgen analyses.
 
 
 
