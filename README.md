@@ -19,8 +19,8 @@ Two python notebooks detailing how to go from raw sequencing data or raw data fr
 * **Replicate_Files.tsv**: Tab-delimited file listing replicate sequencing runs for each individual. The first column lists the best replicate used in **Final-c85-bestrep.ipynb**.
 
 ## Making_Files folder
-*  **Filtering_VCF.ipynb**: Notebook on how to filter a .vcf file from ipyrad for excess heterozygosity, minor allele frequency, linkage, and missing data, using a combination of VCFTools and custom scripts.
-*  **MakingFilesR.ipynb**: Jupyter R notebook for converting a .vcf file into input files for various popgen analyses, primarily using the *radiator* R package. Also includes instructions for running EEMS on a cluster.
+*  **Filtering_VCF.ipynb**: Notebook on how to filter a .vcf file made by ipyrad for excess heterozygosity, minor allele frequency, linkage, and missing data, using a combination of VCFTools and custom scripts.
+*  **MakingFilesR.ipynb**: Jupyter R notebook for converting a filtered .vcf file into input files for various popgen analyses, primarily using the *radiator* R package. Also includes instructions for running EEMS on a cluster. Use this notebook for to convert the VCF files from the Dryad repository into input files for other popgen analyses. 
 
 
 ## Analysis folder
