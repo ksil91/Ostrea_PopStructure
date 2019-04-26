@@ -1,3 +1,6 @@
+## \*Redering problems?\* 
+Recently, Github has sporadically had problems rendering the .ipynb notebooks. If this happens, you can always copy the URL for the specific notebook and view the notebook at https://nbviewer.jupyter.org/ . \([Referenced in this Github issue](https://github.com/jupyter/notebook/issues/3035)\). In the future I'll be looking into a more stable/convenient way to share notebooks.
+
 # Ostrea_PopStructure
 This repository contains code and Jupyter Notebooks detailing assembly and analyses of Genotype-by-Sequencing (GBS) data in the Olympia oyster (*Ostrea lurida*), as presented in:
 
